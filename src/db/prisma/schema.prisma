@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedProjects Project[]
+  memberships   ProjectMember[]
+  invitationsSent Invitation[]
+  notifications Notification[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPrivate   Boolean  @default(false)
+
+  ownerId     String
+  owner        User @relation(fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      ProjectMember[]
+  invitations  Invitation[]
+  files         File[]
+  chat          Chat?
+  conversation  Conversation?
+}
+
+model ProjectMember {
+  id String @id @default(cuid())
+
+  role MemberRole @default(MEMBER)
+  
+  joinedAt DateTime @default(now())
+
+  projectId String
+  userId String
+
+  project Project @relation(fields: [projectId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  messages Message[]
+}
+
+model Invitation {
+  id String @id @default(cuid())
+
+  email String
+
+  status InvitationStatus @default(PENDING)
+
+  projectId String
+  invitedById String
+
+  project Project @relation(fields: [projectId], references: [id])
+  invitedBy User @relation(fields: [invitedById], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id String @id @default(cuid())
+
+  name String
+  path String
+  language String?
+  content String @db.Text
+
+  projectId String
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id String @id @default(cuid())
+
+  projectId String @unique
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  messages Message[]
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  content String @db.Text
+
+  senderId String
+  chatId String
+
+  sender ProjectMember @relation(fields: [senderId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id String @id @default(cuid())
+
+  projectId String @unique
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  aiMessages AIMessage[]
+}
+
+model AIMessage {
+  id String @id @default(cuid())
+
+  role AIRole
+
+  content String @db.Text
+
+  conversationId String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  title String
+
+  message String
+
+  isRead Boolean @default(false)
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum AIRole {
+  USER
+  AI
+}
+
+
+//Later we will add
+// ActivityLog
+// FileVersion
+// ProjectSettings
+// UserSettings
