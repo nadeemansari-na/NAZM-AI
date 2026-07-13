@@ -20,7 +20,7 @@ export class ProjectController {
 
       const validatedData =
         ProjectValidator.createProject.parse(body);
-
+      console.log("project body:",body)
       const project = await ProjectService.createProject({
         ...validatedData,
         ownerId: session.user.id,

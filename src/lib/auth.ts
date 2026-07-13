@@ -2,8 +2,11 @@ import  CredentialsProvider  from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import GithubProvider from "next-auth/providers/github"
 import bcrypt from "bcrypt";
-import prisma from "./prisma"
-export const Next_Auth={
+import {env} from "@/lib/env"
+import prisma from "@/lib/prisma"
+import { NextAuthOptions } from "next-auth";
+console.log("google",env.GOOGLE_CLIENT_ID)
+export const Next_Auth:NextAuthOptions={
     providers:[
         CredentialsProvider({
             name:"Credentials",
@@ -13,7 +16,7 @@ export const Next_Auth={
                 password:{label:"PASSWORD",type:"password",placeholder:'Password'}
             },
          async authorize(credentials:any) {
-    const user = await prisma.user.findFirst(credentials.email);
+    const user = await prisma.user.findUnique(credentials.email);
 
     if (!user) {
         throw new Error("User not found");
@@ -38,15 +41,15 @@ export const Next_Auth={
         }),
         
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || " ",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || " "
+            clientId: env.GOOGLE_CLIENT_ID || " ",
+            clientSecret: env.GOOGLE_CLIENT_SECRET || " "
         }),
         GithubProvider({
-            clientId: process.env.GITHUB_ID || "",
-            clientSecret: process.env.GITHUB_SECRET || ""
+            clientId: env.GITHUB_CLIENT_ID || "",
+            clientSecret: env.GITHUB_CLIENT_SECRET || ""
         })
     ],
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: env.NEXTAUTH_SECRET,
     callbacks:{
         jwt({token ,user}:any){
             if(user){
@@ -57,7 +60,7 @@ export const Next_Auth={
         },
         session:({session , token, user}:any)=>{
             if(session && session.user){
-                session.user.id=token.sub
+                session.user.id=token.id
                 session.user.name=token.name
             }
             return session;
