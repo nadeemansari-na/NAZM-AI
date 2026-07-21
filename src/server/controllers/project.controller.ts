@@ -38,7 +38,6 @@ export class ProjectController {
   static async getProjects(request: NextRequest) {
     try {
       const session = await NextAuth(Next_Auth);
-
       if (!session?.user?.id) {
         return NextResponse.json(
           { success: false, message: "Unauthorized" },

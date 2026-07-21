@@ -8,7 +8,6 @@ export class AuthController {
       const body = await request.json();
       const validatedData =
         AuthValidator.register.parse(body);
-        console.log("body")
       const user = await AuthService.register(validatedData);
       return NextResponse.json(
         {

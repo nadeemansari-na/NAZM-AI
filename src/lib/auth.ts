@@ -16,8 +16,11 @@ export const Next_Auth:NextAuthOptions={
                 password:{label:"PASSWORD",type:"password",placeholder:'Password'}
             },
          async authorize(credentials:any) {
-    const user = await prisma.user.findUnique(credentials.email);
-
+    const user = await prisma.user.findUnique({
+        where:{
+            email:credentials.email
+        }
+    });
     if (!user) {
         throw new Error("User not found");
     }
@@ -30,7 +33,6 @@ export const Next_Auth:NextAuthOptions={
     if (!isValid) {
         throw new Error("Invalid credentials");
     }
-
     return {
         id: user.id,
         name: user.name,
